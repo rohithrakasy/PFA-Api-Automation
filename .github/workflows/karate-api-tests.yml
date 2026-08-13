@@ -1,0 +1,101 @@
+name: PFA Karate API Tests
+
+# Defines when this workflow should run
+on:
+
+  # Run Automatically when code is pushed
+  push:
+    branches:
+      - main
+      - karatedev
+  # RUn Automatically when a PULL Request is done
+  # aganist main or karatedev
+  pull_request:
+    branches:
+      - main
+      - karatedev
+  # Allow us to  manually run the workflow
+  #from the Github Actions page
+  workflow_dispatch:
+
+jobs:
+
+  # Name of our job
+  karate-api-tests:
+
+    #Github will create an ubuntu machine
+    # to execute our automation
+    runs-on: ubuntu-latest
+
+    steps:
+      # ----------------------------------------
+      # Step 1: Download our repository
+      # ----------------------------------------
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+        # ----------------------------------------
+        # Step 2: Install Java
+        # ----------------------------------------
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+
+          # ----------------------------------------
+          # Step 3: Display Java version
+          # Useful while setting up the framework
+          # ----------------------------------------
+      - name: Verify Java Version
+        run: java -version
+
+
+      # ----------------------------------------
+      # Step 4: Display Maven version
+      # ----------------------------------------
+      - name: Verify Maven Version
+        run: mvn -version
+
+          # ----------------------------------------
+          # Step 5: Execute Karate API Tests
+        # Credentials come from GitHub Secrets
+        # ----------------------------------------
+
+      - name: Run karate api tests
+
+        run: |
+          mvn clean test \
+            "-Dkarate.env=qa" \
+            "-Demail=${{ secrets.API_EMAIL }}" \
+            "-Dpassword=${{ secrets.API_PASSWORD }}" \
+            "-DdeviceId=${{ secrets.DEVICE_ID }}"
+
+      # ----------------------------------------
+      # Step 6: Save Karate HTML reports
+      # Runs even when tests fail
+      # ----------------------------------------
+
+      - name: Upload Karate Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: karate-api-report
+          path: target/karate-reports/
+          if-no-files-found: warn
+
+            # ----------------------------------------
+            # Step 7: Save Maven Surefire reports
+          # Useful for troubleshooting failed tests
+          # ----------------------------------------
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-report
+          path: target/surefire-reports/
+          if-no-files-found: warn
+
+
