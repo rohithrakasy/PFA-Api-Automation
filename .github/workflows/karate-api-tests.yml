@@ -1,101 +1,66 @@
 name: PFA Karate API Tests
 
-# Defines when this workflow should run
 on:
-
-  # Run Automatically when code is pushed
   push:
-    branches:
-      - main
-      - karatedev
-  # RUn Automatically when a PULL Request is done
-  # aganist main or karatedev
+    branches: [ main, karatedev ]
   pull_request:
-    branches:
-      - main
-      - karatedev
-  # Allow us to  manually run the workflow
-  #from the Github Actions page
+    branches: [ main, karatedev ]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'qa'
+        type: choice
+        options: [ qa, staging ]
 
 jobs:
-
-  # Name of our job
   karate-api-tests:
-
-    #Github will create an ubuntu machine
-    # to execute our automation
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      # ----------------------------------------
-      # Step 1: Download our repository
-      # ----------------------------------------
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-        # ----------------------------------------
-        # Step 2: Install Java
-        # ----------------------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
           cache: maven
 
-
-          # ----------------------------------------
-          # Step 3: Display Java version
-          # Useful while setting up the framework
-          # ----------------------------------------
-      - name: Verify Java Version
-        run: java -version
-
-
-      # ----------------------------------------
-      # Step 4: Display Maven version
-      # ----------------------------------------
-      - name: Verify Maven Version
-        run: mvn -version
-
-          # ----------------------------------------
-          # Step 5: Execute Karate API Tests
-        # Credentials come from GitHub Secrets
-        # ----------------------------------------
-
-      - name: Run karate api tests
-
+      - name: Verify Java and Maven versions
         run: |
-          mvn clean test \
-            "-Dkarate.env=qa" \
-            "-Demail=${{ secrets.API_EMAIL }}" \
-            "-Dpassword=${{ secrets.API_PASSWORD }}" \
-            "-DdeviceId=${{ secrets.DEVICE_ID }}"
+          java -version
+          mvn -version
 
-      # ----------------------------------------
-      # Step 6: Save Karate HTML reports
-      # Runs even when tests fail
-      # ----------------------------------------
+      - name: Run Karate API tests
+        env:
+          API_EMAIL: ${{ secrets.API_EMAIL }}
+          API_PASSWORD: ${{ secrets.API_PASSWORD }}
+          DEVICE_ID: ${{ secrets.DEVICE_ID }}
+        run: |
+          mvn clean test -B -ntp \
+            -Dkarate.env=${{ github.event.inputs.environment || 'qa' }} \
+            -Demail="$API_EMAIL" \
+            -Dpassword="$API_PASSWORD" \
+            -DdeviceId="$DEVICE_ID"
 
-      - name: Upload Karate Reports
+      - name: Upload Karate reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: karate-api-report
           path: target/karate-reports/
           if-no-files-found: warn
+          retention-days: 14
 
-            # ----------------------------------------
-            # Step 7: Save Maven Surefire reports
-          # Useful for troubleshooting failed tests
-          # ----------------------------------------
       - name: Upload Surefire reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-report
           path: target/surefire-reports/
-          if-no-files-found: warn
-
-
+          if-no-files-found: error
+          retention-days: 14

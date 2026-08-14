@@ -25,6 +25,9 @@ function fn(){
     config.password = karate.properties['password']
     config.deviceId = karate.properties['deviceId'];
 
+    karate.configure('connectTimeout', 10000);
+    karate.configure('readTimeout', 10000);
+
 
     return config;
 }
