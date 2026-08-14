@@ -18,12 +18,15 @@ function fn(){
     }
 
     else if(env === 'qa'){
-        config.baseUrl = 'http://pfa-auth-alb-qa-1606533570.us-east-2.elb.amazonaws.com/apim'
+        config.baseUrl = 'https://stagingapi.suretyforce.com/apim'
     }
 
     config.email = karate.properties['email'];
     config.password = karate.properties['password']
     config.deviceId = karate.properties['deviceId'];
+
+    karate.configure('connectTimeout', 10000);
+    karate.configure('readTimeout', 10000);
 
 
     return config;
