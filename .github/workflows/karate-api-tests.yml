@@ -10,9 +10,9 @@ on:
       environment:
         description: 'Target environment'
         required: true
-        default: 'qa'
+        default: 'dev'
         type: choice
-        options: [ qa, staging ]
+        options: [ dev, qa, staging ]
 
 jobs:
   karate-api-tests:
