@@ -4,6 +4,7 @@ public class TestRunner {
 
     @Karate.Test
     Karate runtests(){
-        return Karate.run("classpath:features/Campaign/GetCampaign.feature");
+//        return Karate.run("classpath:features/Campaign/GetCampaign.feature");
+        return Karate.run("classpath:features");
     }
 }
