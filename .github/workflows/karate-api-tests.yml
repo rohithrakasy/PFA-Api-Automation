@@ -54,7 +54,7 @@ jobs:
           name: karate-api-report
           path: target/karate-reports/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 2
 
       - name: Upload Surefire reports
         if: always()
@@ -63,4 +63,4 @@ jobs:
           name: surefire-report
           path: target/surefire-reports/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 2
